@@ -8,9 +8,23 @@ import React, { useState, useRef, useEffect } from "react";
 function App() {
 	const [todos, setTodos] = useState([]);
 	const [input, setInput] = useState("");
-	const [total,setTotal] = useState(0);
+	const [total, setTotal] = useState(0);
 	const [active, setActive] = useState(0);
 	const [done, setDone] = useState(0);
+	const [completed, setCompleted] = useState(0);
+	const [filter, setFilter] = useState("all"); // "all", "active", or "done"
+
+	const filteredTodos = todos.filter((todo) => {
+		if (filter === "all") return true;
+		if (filter === "active") return !todo.completed;
+		if (filter === "done") return todo.completed;
+		return true;
+	});
+
+	function clearCompleted() {
+		setTodos((todos) => todos.filter((todo) => !todo.completed));
+	}
+
 	function addTodo() {
 		if (input.trim() === "") return;
 		const newTodo = {
@@ -24,17 +38,49 @@ function App() {
 		setDone(done + 0);
 		setInput("");
 	}
-	function deleteTodo(id){
-		setTodos(todos.filter(todo=>todo.id!==id))
+
+	function setDoneCount(id) {
+		setTodos((prevTodos) =>
+			prevTodos.map((todo) =>
+				todo.id === id ? { ...todo, completed: !todo.completed } : todo
+			)
+		);
+		const completedCount = todos.filter((todo) => todo.completed).length + 1;
+		console.log(completedCount);
+		setCompleted(Math.round((completedCount / todos.length) * 100));
+		setDone(completedCount);
 	}
 
-	function Edit(id){
-		const todoToEdit = todos.find(todo => todo.id === id);
+	function deleteTodo(id) {
+		setTodos(todos.filter((todo) => todo.id !== id));
+		setDone(done - 1);
+		setTotal(total - 1);
+		setActive(active - 1);
+	}
+
+	function Edit(id) {
+		const todoToEdit = todos.find((todo) => todo.id === id);
 		if (todoToEdit) {
 			setInput(todoToEdit.text);
-			setTodos(todos.filter(todo => todo.id !== id));
+			setTodos(todos.filter((todo) => todo.id !== id));
 		}
 	}
+
+	const getProgressColor = () => {
+		if (completed < 30) return "bg-red-500";
+		if (completed < 70) return "bg-yellow-500";
+		return "bg-green-500";
+	};
+
+	useEffect(() => {
+		setTotal(todos.length);
+		setDone(todos.filter((todo) => todo.completed).length);
+		setActive(todos.filter((todo) => !todo.completed).length);
+		const completedCount = todos.filter((todo) => todo.completed).length;
+		setCompleted(
+			todos.length > 0 ? Math.round((completedCount / todos.length) * 100) : 0
+		);
+	}, [todos]);
 
 	return (
 		<div className="w-full h-full flex items-center flex-col">
@@ -74,34 +120,73 @@ function App() {
 						/>
 					</div>
 					<div className="flex bg-gray-100 gap-2 w-[250px] rounded-lg p-1.5 justify-between">
-						<button className="flex gap-2 items-center">
+						<button
+							className="flex gap-2 px-2 items-center cursor-pointer hover:bg-white rounded-lg"
+							onClick={() => setFilter("all")}
+						>
 							<MdAssignment className="text-amber-800" />
 							All
 						</button>
-						<button className="flex gap-2 items-center">
+						<button
+							className="flex gap-2 items-center px-2 rounded-lg cursor-pointer hover:bg-white"
+							onClick={() => setFilter("active")}
+						>
 							<AiFillThunderbolt className="text-amber-300" />
 							Active
 						</button>
-						<button>✅ Done</button>
+						<button
+							onClick={() => setFilter("done")}
+							className="cursor-pointer hover:bg-white px-2 rounded-lg"
+						>
+							✅ Done
+						</button>
 					</div>
 				</div>
-				<div className="flex gap-2 mt-3">
-					📝 {total} total 🔵 {active} active ✅ {done} done
+				<div className="flex gap-2 mt-3 justify-between items-center">
+					<div className="flex">
+						<p>📝 {total} total</p>
+						<p>🔵 {active} active</p>
+						<p>✅ {done} done</p>
+						<p className="shadow-lg shadow-black/10 rounded-lg text-center font-bold text-[13px] outline-0 ml-2">
+							{completed}% completed
+						</p>
+					</div>
+					{completed > 1 && (
+						<button
+							className="ml-8 border-red-100 text-red-500 py-1 font-bold text-[13px] px-2 border-2 rounded-lg shadow-lg cursor-pointer"
+							onClick={() => clearCompleted()}
+						>
+							🗑️ Clear completed ({done})
+						</button>
+					)}
 				</div>
-				<hr className="border-4 rounded-3xl border-gray-200 m-2" />
+				<div className="w-full bg-gray-200 rounded-3xl h-3 mt-3">
+					<div
+						className={`${getProgressColor()} h-3 rounded-3xl transition-all duration-500`}
+						style={{ width: `${completed}%` }}
+					></div>
+				</div>
+
 				{todos.length === 0 && (
 					<div className="w-full flex items-center justify-center h-[150px] flex-col gap-2">
 						<p className="text-[40px]">🎯</p>
-						<p className="text-[15px] text-gray-400">No todos found matching your criteriaNo todos found matching your criteria</p>
+						<p className="text-[15px] text-gray-400">
+							No todos found matching your criteriaNo todos found matching your
+							criteria
+						</p>
 					</div>
 				)}
-				{todos.map((todo) => (
+				{filteredTodos.map((todo) => (
 					<div
 						key={todo.id}
 						className="group flex gap-2 items-center mt-2 justify-between text-center h-[50px]"
 					>
 						<div className="flex items-center gap-2">
-							<input type="radio" onClick={() => setDone(done + 1)} />
+							<input
+								type="checkbox"
+								onChange={() => setDoneCount(todo.id)}
+								checked={todo.completed}
+							/>
 							<li className="list-none">{todo.text}</li>
 						</div>
 						<div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
