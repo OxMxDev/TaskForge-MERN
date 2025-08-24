@@ -349,8 +349,7 @@ function App() {
 					<div className="w-full flex items-center justify-center h-[150px] flex-col gap-2">
 						<p className="text-[40px]">🎯</p>
 						<p className="text-[15px] text-gray-400">
-							No todos found matching your criteriaNo todos found matching your
-							criteria
+							No todos found matching your criteria
 						</p>
 					</div>
 				)}
