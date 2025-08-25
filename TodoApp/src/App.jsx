@@ -11,7 +11,7 @@ import {
 	differenceInHours,
 	differenceInDays,
 } from "date-fns";
-
+import axios from "axios"
 function App() {
 	const [todos, setTodos] = useState([]);
 	const [input, setInput] = useState("");
@@ -29,6 +29,14 @@ function App() {
 	const [category,setCategory] = useState("")
 	const inputRef = useRef();
 
+	const fetchApi = async()=>{
+		const response = await axios.get("http://localhost:3000/todos")
+		setTodos(response.data)
+	}
+
+	useEffect(()=>{
+		fetchApi()
+	},[])
 	const inputUpdate = (value) => {
 		if (inputRef.current) {
 			inputRef.current.value = value; // Update input value
@@ -69,65 +77,52 @@ function App() {
 		setTodos(todos.filter((todo) => !todo.completed));
 	}
 
-	function addTodo() {
+	async function addTodo() {
 		if (input.trim() === "") return;
 
-		if (editingId !== null) {
-			// Update existing todo
-			setTodos((prevTodos) =>
-				prevTodos.map((todo) =>
-					todo.id === editingId
-						? { ...todo, text: input, editedAt: new Date(), edit: true }
-						: todo
-				)
-			);
-			setEditingId(null);
-			setInput("");
-			return;
-		}
 		const newTodo = {
-			id: todos.length + 1,
 			text: input,
 			completed: false,
 			createdAt: new Date(),
 			editedAt: null,
 			edit: false,
-			priority:selected,
-			category:category
+			priority: selected,
+			category: category,
 		};
-		setTodos([...todos, newTodo]);
-		setTotal(todos.length + 1);
-		setActive(todos.length + 1);
-		setDone(done + 0);
-		setInput("");
+
+		try {
+			const res = await axios.post("http://localhost:3000/todos", newTodo);
+			setTodos([...todos, res.data]); // ✅ Use backend response
+			setInput("");
+			setCategory("");
+		} catch (error) {
+			console.error("Error adding todo:", error);
+		}
 	}
 
-	function setDoneCount(id) {
-		setTodos((prevTodos) => {
-			const updatedTodos = prevTodos.map((todo) =>
-				todo.id === id ? { ...todo, completed: !todo.completed } : todo
-			);
 
-			const completedCount = updatedTodos.filter(
-				(todo) => todo.completed
-			).length;
-			setCompleted(
-				updatedTodos.length > 0
-					? Math.round((completedCount / updatedTodos.length) * 100)
-					: 0
-			);
-			setDone(completedCount);
+	async function setDoneCount(id) {
+		const todo = todos.find((t) => t.id === id);
+		const updatedTodo = { ...todo, completed: !todo.completed };
 
-			return updatedTodos;
-		});
+		try {
+			await axios.put(`http://localhost:3000/todos/${id}`, updatedTodo);
+			setTodos(todos.map((t) => (t.id === id ? updatedTodo : t)));
+		} catch (error) {
+			console.error("Error updating todo:", error);
+		}
 	}
 
-	function deleteTodo(id) {
-		setTodos(todos.filter((todo) => todo.id !== id));
-		setDone(done - 1);
-		setTotal(total - 1);
-		setActive(active - 1);
+
+	async function deleteTodo(id) {
+		try {
+			await axios.delete(`http://localhost:3000/todos/${id}`);
+			setTodos(todos.filter((todo) => todo.id !== id)); // ✅ Update UI
+		} catch (error) {
+			console.error("Error deleting todo:", error);
+		}
 	}
+
 
 	function Edit(id) {
 		const todoToEdit = todos.find((todo) => todo.id === id);
