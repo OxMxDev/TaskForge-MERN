@@ -30,7 +30,9 @@ function App() {
 	const inputRef = useRef();
 
 	const fetchApi = async()=>{
-		const response = await axios.get("http://localhost:3000/todos")
+		const response = await axios.get(
+			"https://task-forge-mern-xy3t.vercel.app/todos"
+		);
 		setTodos(response.data)
 	}
 
@@ -91,7 +93,10 @@ function App() {
 		};
 
 		try {
-			const res = await axios.post("http://localhost:3000/todos", newTodo);
+			const res = await axios.post(
+				"https://task-forge-mern-xy3t.vercel.app/todos",
+				newTodo
+			);
 			setTodos([...todos, res.data]); // ✅ Use backend response
 			setInput("");
 			setCategory("");
@@ -106,7 +111,10 @@ function App() {
 		const updatedTodo = { ...todo, completed: !todo.completed };
 
 		try {
-			await axios.put(`http://localhost:3000/todos/${id}`, updatedTodo);
+			await axios.put(
+				`https://task-forge-mern-xy3t.vercel.app/todos/${id}`,
+				updatedTodo
+			);
 			setTodos(todos.map((t) => (t.id === id ? updatedTodo : t)));
 		} catch (error) {
 			console.error("Error updating todo:", error);
@@ -116,7 +124,7 @@ function App() {
 
 	async function deleteTodo(id) {
 		try {
-			await axios.delete(`http://localhost:3000/todos/${id}`);
+			await axios.delete(`https://task-forge-mern-xy3t.vercel.app/todos/${id}`);
 			setTodos(todos.filter((todo) => todo.id !== id)); // ✅ Update UI
 		} catch (error) {
 			console.error("Error deleting todo:", error);

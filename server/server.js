@@ -3,7 +3,7 @@ const cors = require("cors");
 const app = express();
 
 const corsOptions = {
-	origin: ["http://localhost:5173"], // frontend URL
+	origin: ["https://task-forge-mern.vercel.app"], // frontend URL
 };
 
 app.use(cors(corsOptions));
@@ -11,19 +11,19 @@ app.use(express.json()); // ✅ For parsing JSON payloads
 
 let todos = [];
 
-// ✅ GET all todos
+
 app.get("/todos", (req, res) => {
 	res.json(todos);
 });
 
-// ✅ POST new todo
+
 app.post("/todos", (req, res) => {
 	const newTodo = { id: Date.now(), ...req.body };
 	todos.push(newTodo);
 	res.status(201).json(newTodo);
 });
 
-// ✅ PUT update todo
+
 app.put("/todos/:id", (req, res) => {
 	const id = parseInt(req.params.id);
 	const index = todos.findIndex((todo) => todo.id === id);
@@ -34,7 +34,7 @@ app.put("/todos/:id", (req, res) => {
 	res.json(todos[index]);
 });
 
-// ✅ DELETE todo
+
 app.delete("/todos/:id", (req, res) => {
 	const id = parseInt(req.params.id);
 	todos = todos.filter((todo) => todo.id !== id);
